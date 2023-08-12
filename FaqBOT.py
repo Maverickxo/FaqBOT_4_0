@@ -3,6 +3,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram import Bot, Dispatcher, executor, types
 from keywords import *
 from config import *
+from sub_check import check_user_subs
 
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
@@ -37,6 +38,9 @@ previous_message_id = None
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def handle_message(message: types.Message):
     global previous_message_id
+
+    await check_user_subs(message)
+
     text = message.text.lower()
 
     if len(text.split()) == 1:
