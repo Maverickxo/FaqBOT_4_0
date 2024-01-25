@@ -1,13 +1,19 @@
 import logging, asyncio, aiocron, html, aiogram
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import Bot, types, executor, Dispatcher
 from keywords import *
 from config import *
+
+from mooh_send import navigate_texts
+from mooh_send import announcements
 from sub_check import check_user_subs
+from new_chat_users import new_chat_users, lv_chat_users
 
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
-dp = Dispatcher(bot, storage=storage)
+dp = Dispatcher(bot)
+
+dp.register_callback_query_handler(navigate_texts, text_contains="btn")
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='bot.log', level=logging.INFO)
@@ -27,8 +33,13 @@ def create_keyboard():
     return markup
 
 
+@dp.message_handler(commands='moohmsg')
+async def moo_h_mor(message: types.Message):
+    await announcements(message)
+
+
 @dp.message_handler(commands=['sendbtnchat'])
-async def start(none):
+async def start(message):
     await bot.send_message(chat_id=CHAT_ID, text=BTN_TEXT, parse_mode='Markdown', reply_markup=create_keyboard())
 
 
@@ -100,13 +111,7 @@ async def handle_message(message: types.Message):
         await bot.send_message(message.chat.id, ERROR_TEXT)
 
 
-@dp.message_handler(content_types=[types.ContentType.NEW_CHAT_MEMBERS, types.ContentType.LEFT_CHAT_MEMBER])
-async def delete_system_message(message: types.Message):
-    await message.delete()
-
-
 async def send_message(chat_id, text):
-    global message
     formatted_text = html.escape(text)
     try:
         if hasattr(send_message, 'last_message_id'):
